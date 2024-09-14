@@ -30,11 +30,11 @@ export class LinksController {
     return this.linksService.convertToShort(data, req.user.id);
   }
 
-  @Post('get-real')
+  @Post('real')
   @ApiOperation({ summary: 'Convert short link to normal' })
   @ApiResponse({ status: 404, description: 'Not valid or expired link' })
   getRealLink(@Body() body: GetRealLinkDto) {
-    return this.linksService.getRealLink(body);
+    return this.linksService.getLink(body);
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
