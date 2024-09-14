@@ -43,7 +43,7 @@ export class UserService {
 
     await this.userRepository.save(user);
 
-    await this.mailService.sendResetPasswordEmail(user, resetToken);
+    await this.mailService.sendSetPasswordRequestEmail(user, resetToken);
     return { message: 'Password reset email sent' };
   }
 

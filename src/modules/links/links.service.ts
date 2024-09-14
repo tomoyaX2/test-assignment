@@ -37,7 +37,7 @@ export class LinksService {
     try {
       const linkConsumerUrl = this.configService.get('CLIENT_URL');
       const shortLinkHash = generateRandomString();
-      return `${linkConsumerUrl}/s/${shortLinkHash}`;
+      return `${linkConsumerUrl}#/s/${shortLinkHash}`;
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);
@@ -139,10 +139,16 @@ export class LinksService {
 
   getLink = async (data: GetRealLinkDto) => {
     try {
+      const linkConsumerUrl = this.configService.get('CLIENT_URL');
+      const short_link = data.shortLink.startsWith('https://')
+        ? data.shortLink
+        : `${linkConsumerUrl}#/s/${data.shortLink}`;
       const link = await this.linksRepository.findOne({
-        where: { short_link: data.shortLink, deleted_date: null },
+        where: {
+          short_link,
+          deleted_date: null,
+        },
       });
-
       if (!link) {
         throw new BadRequestException(Errors.notValidOrExpiredLink);
       }
