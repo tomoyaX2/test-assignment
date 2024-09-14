@@ -11,7 +11,7 @@ import { generateResetToken } from 'src/shared/utils';
 import { MailService } from '../mail/mail.service';
 import { Errors } from 'src/shared/errors';
 import { S3Service } from '../s3/s3.service';
-
+import * as _ from 'lodash';
 @Injectable()
 export class UserService {
   constructor(
@@ -20,6 +20,16 @@ export class UserService {
     private readonly mailService: MailService,
     private readonly s3Service: S3Service,
   ) {}
+
+  async getUserById(userId: string) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException(Errors.userNotFound);
+    }
+
+    return _.omit(user, ['password', 'reset_token']);
+  }
 
   async sendPasswordResetEmail(email: string) {
     const user = await this.userRepository.findOne({ where: { email } });

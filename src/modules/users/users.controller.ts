@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   UseGuards,
   Req,
+  Get,
 } from '@nestjs/common';
 import {
   ChangeEmailDto,
@@ -24,6 +25,12 @@ export class UserController {
   @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.userService.sendPasswordResetEmail(forgotPasswordDto.email);
+  }
+
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  getUser(@Req() req) {
+    return this.userService.getUserById(req.user.id);
   }
 
   @Post('reset-password')
