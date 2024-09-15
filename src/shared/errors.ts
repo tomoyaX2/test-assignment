@@ -4,4 +4,5 @@ export const Errors = {
   userNotFound: { code: '003' }, // User with this email does not exist
   invalidOrExpiredToken: { code: '004' }, // invalid or expired token
   notValidOrExpiredLink: { code: '005' }, // Not valid or expired link
+  invalidFileType: { code: '006' }, // Invalid file type
 };

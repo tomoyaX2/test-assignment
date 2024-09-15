@@ -3,11 +3,12 @@ import {
   Post,
   Body,
   Patch,
-  UploadedFile,
   UseInterceptors,
   UseGuards,
   Req,
   Get,
+  UploadedFiles,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ChangeEmailDto,
@@ -15,8 +16,17 @@ import {
   ResetPasswordDto,
 } from './users.dto';
 import { UserService } from './users.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiConsumes } from '@nestjs/swagger';
+import { memoryStorage } from 'multer';
+import { UploadFile } from 'src/shared/decorators/file-upload.decorator';
+import {
+  ALLOWED_DOCUMENT_MIME_TYPES,
+  MAX_DOCS_COUNT,
+  MAX_DOCS_SIZE,
+} from 'src/shared/constants';
+import { Errors } from 'src/shared/errors';
 
 @Controller('user')
 export class UserController {
@@ -50,10 +60,28 @@ export class UserController {
   }
 
   @Post('upload-avatar')
+  @ApiConsumes('multipart/form-data')
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Req() req) {
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: memoryStorage(),
+    }),
+  )
+  @UploadFile('files', MAX_DOCS_COUNT, {
+    limits: { fileSize: MAX_DOCS_SIZE },
+    fileFilter: (req, file, cb) => {
+      if (!ALLOWED_DOCUMENT_MIME_TYPES.has(file.mimetype)) {
+        return cb(new BadRequestException(Errors.invalidFileType), false);
+      }
+
+      return cb(null, true);
+    },
+  })
+  async uploadAvatar(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req,
+  ) {
     const userId = req.user.id;
-    return this.userService.uploadAvatar(userId, file);
+    return this.userService.uploadAvatar(userId, files[0]);
   }
 }

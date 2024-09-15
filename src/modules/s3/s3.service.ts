@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
-  S3,
+  S3Client,
   PutObjectCommand,
   PutObjectCommandInput,
 } from '@aws-sdk/client-s3';
@@ -9,11 +9,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class S3Service {
-  private s3Client: S3;
+  private s3Client: S3Client;
   private bucketName: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.s3Client = new S3({
+    this.s3Client = new S3Client({
       endpoint: configService.get('S3_ENDPOINT'),
       region: configService.get('S3_REGION'),
       credentials: {
@@ -22,7 +22,7 @@ export class S3Service {
       },
     });
 
-    this.bucketName = this.configService.get<string>('S3_BUCKET_NAME');
+    this.bucketName = this.configService.get('S3_BUCKET_NAME');
   }
 
   async uploadUserAvatar(file: Express.Multer.File, userId: string) {
@@ -39,7 +39,7 @@ export class S3Service {
 
       await this.s3Client.send(new PutObjectCommand(bucketParams));
 
-      return imageUrl;
+      return `${this.configService.get('CDN_URL')}/${imageUrl}`;
     } catch (error) {
       console.error('Error uploading file to S3:', error);
       throw new Error('Failed to upload file');
