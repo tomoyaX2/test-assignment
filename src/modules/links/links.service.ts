@@ -68,8 +68,8 @@ export class LinksService {
       );
 
       const expiration_date =
-        userId && data.live_time
-          ? addMinutes(new Date(), data.live_time)
+        userId && data.expirationTime
+          ? addMinutes(new Date(), data.expirationTime)
           : addMinutes(new Date(), parseInt(expirationTimeMinutes));
 
       const newLink = await this.linksRepository.save({

@@ -76,6 +76,37 @@ export class UserService {
     return { message: 'Email updated successfully' };
   }
 
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<boolean> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new BadRequestException(Errors.userNotFound);
+    }
+
+    if (user.password) {
+      const isOldPasswordValid = await bcrypt.compare(
+        oldPassword,
+        user.password,
+      );
+
+      if (!isOldPasswordValid) {
+        return false;
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedNewPassword;
+
+    await this.userRepository.save(user);
+
+    return true;
+  }
+
   async uploadAvatar(
     userId: string,
     file: Express.Multer.File,

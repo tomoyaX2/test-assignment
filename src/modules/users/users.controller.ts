@@ -3,7 +3,6 @@ import {
   Post,
   Body,
   Patch,
-  UseInterceptors,
   UseGuards,
   Req,
   Get,
@@ -12,20 +11,16 @@ import {
 } from '@nestjs/common';
 import {
   ChangeEmailDto,
+  ChangePasswordDto,
   ForgotPasswordDto,
   ResetPasswordDto,
 } from './users.dto';
 import { UserService } from './users.service';
-import { FilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiConsumes } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { UploadFile } from 'src/shared/decorators/file-upload.decorator';
-import {
-  ALLOWED_DOCUMENT_MIME_TYPES,
-  MAX_DOCS_COUNT,
-  MAX_DOCS_SIZE,
-} from 'src/shared/constants';
+import { MAX_DOCS_COUNT, MAX_DOCS_SIZE } from 'src/shared/constants';
 import { Errors } from 'src/shared/errors';
 
 @Controller('user')
@@ -43,7 +38,7 @@ export class UserController {
     return this.userService.getUserById(req.user.id);
   }
 
-  @Post('reset-password')
+  @Post('set-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.userService.resetPassword(
       resetPasswordDto.token,
@@ -59,23 +54,33 @@ export class UserController {
     );
   }
 
+  @Post('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req,
+  ) {
+    const userId = req.user?.id;
+
+    const { oldPassword, newPassword } = changePasswordDto;
+
+    const result = await this.userService.changePassword(
+      userId,
+      oldPassword,
+      newPassword,
+    );
+
+    if (!result) {
+      throw new BadRequestException(Errors.oldPasswordIsIncorrect);
+    }
+  }
+
   @Post('upload-avatar')
   @ApiConsumes('multipart/form-data')
   @UseGuards(AuthGuard('jwt'))
-  @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      storage: memoryStorage(),
-    }),
-  )
   @UploadFile('files', MAX_DOCS_COUNT, {
     limits: { fileSize: MAX_DOCS_SIZE },
-    fileFilter: (req, file, cb) => {
-      if (!ALLOWED_DOCUMENT_MIME_TYPES.has(file.mimetype)) {
-        return cb(new BadRequestException(Errors.invalidFileType), false);
-      }
-
-      return cb(null, true);
-    },
+    storage: memoryStorage(),
   })
   async uploadAvatar(
     @UploadedFiles() files: Array<Express.Multer.File>,

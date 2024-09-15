@@ -5,4 +5,5 @@ export const Errors = {
   invalidOrExpiredToken: { code: '004' }, // invalid or expired token
   notValidOrExpiredLink: { code: '005' }, // Not valid or expired link
   invalidFileType: { code: '006' }, // Invalid file type
+  oldPasswordIsIncorrect: { code: '007' }, // 'Old password is incorrect'
 };

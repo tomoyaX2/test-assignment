@@ -1,4 +1,11 @@
-import { IsNumber, IsUrl, MaxLength, MinLength } from 'class-validator';
+import {
+  IsNumber,
+  IsUrl,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class ConvertToShortLinkFreeDto {
   @IsUrl()
@@ -14,9 +21,9 @@ export class ConvertToShortLinkDto {
   url: string;
 
   @IsNumber()
-  @MinLength(1)
-  @MaxLength(2000)
-  live_time?: number;
+  @Min(15)
+  @Max(60)
+  expirationTime?: number;
 }
 
 export class GetRealLinkDto {
